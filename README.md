@@ -68,6 +68,29 @@ Security mode (includes ZAP; requires Docker for the container baseline scan, ot
 ./audit.sh --security https://example.com/
 ```
 
+### Docker Setup (For OWASP ZAP Baseline)
+By default, `--security` will try to run the OWASP ZAP baseline scan in a Docker container (`ghcr.io/zaproxy/zaproxy:stable`).
+
+If Docker is not installed or not running, the script will fall back to local `zap.sh` (if installed). If neither is available, it will skip the ZAP step.
+
+Debian/Kali install:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+```
+
+Important: group membership changes usually require logging out and back in (or starting a new shell) before `docker` works without `sudo`.
+
+Quick check:
+
+```bash
+docker --version
+docker info
+```
+
 Security + summary:
 
 ```bash
