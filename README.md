@@ -8,7 +8,7 @@ Reusable URL audit script for:
 - Optional security checks (`--security`): header presence, TLS cert, optional OWASP ZAP baseline via Docker
 
 ## Default target
-`https://dropsites.biz/`
+`https://example.com/`
 
 ## Usage
 From this folder:
