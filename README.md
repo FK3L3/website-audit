@@ -10,6 +10,11 @@ Reusable URL audit script for:
 ## Default target
 `https://example.com/`
 
+## Authorization / Responsible Use
+This tool can perform security-oriented scanning (for example, OWASP ZAP when `--security` is enabled).
+
+Only run it against websites and systems you own or where you have explicit written permission to test. Unauthorized scanning may be illegal and can trigger abuse alerts.
+
 ## Usage
 From this folder:
 
