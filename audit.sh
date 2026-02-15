@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_URL="https://dropsites.biz/"
+DEFAULT_URL="https://example.com/"
 SUMMARY_ONLY=0
 SECURITY_MODE=0
 URL="$DEFAULT_URL"
