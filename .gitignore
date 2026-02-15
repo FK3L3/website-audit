@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# generated reports/artifacts
+reports/
+*.zip
+
+# playwright / chrome artifacts (just in case)
+*.trace
+*.har
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/

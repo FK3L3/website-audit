@@ -1,0 +1,18 @@
+{
+  "name": "website-audit",
+  "version": "1.0.0",
+  "description": "Reusable URL audit script for: - Lighthouse (performance, accessibility, best practices, SEO) - Pa11y accessibility checks (WCAG2AA) - Broken internal/external link scan - Playwright smoke checks (console errors, page errors, HTTP 4xx/5xx)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "broken-link-checker": "^0.7.8",
+    "lighthouse": "^13.0.3",
+    "pa11y": "^9.1.0",
+    "playwright": "^1.58.2"
+  }
+}
