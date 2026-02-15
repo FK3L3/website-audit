@@ -23,10 +23,35 @@ chmod +x audit.sh
 ./audit.sh
 ```
 
-Optional URL override:
+### Arguments
+The script supports these arguments:
+
+- `--summary`: Print a compact summary at the end (scores + issue counts).
+- `--security`: Run extra security checks (HTTP header presence, TLS cert info, and OWASP ZAP scan).
+- `-h`, `--help`: Show built-in help/usage.
+- `[url]`: Optional target URL. Defaults to the “Default target” above.
+
+Notes:
+- Flags can be combined in any order: `./audit.sh --security --summary <url>`.
+- If you provide multiple URLs, the last one “wins”.
+
+### Examples
+Default URL:
+
+```bash
+./audit.sh
+```
+
+Override URL:
 
 ```bash
 ./audit.sh https://example.com/
+```
+
+Help:
+
+```bash
+./audit.sh --help
 ```
 
 Summary view (scores + issue counts):
@@ -36,10 +61,16 @@ Summary view (scores + issue counts):
 ./audit.sh --summary https://example.com/
 ```
 
-Security mode:
+Security mode (includes ZAP; requires Docker for the container baseline scan, otherwise uses local `zap.sh` if present):
 
 ```bash
 ./audit.sh --security
+./audit.sh --security https://example.com/
+```
+
+Security + summary:
+
+```bash
 ./audit.sh --security --summary
 ./audit.sh --security --summary https://example.com/
 ```
