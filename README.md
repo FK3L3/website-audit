@@ -1,5 +1,23 @@
 # Website Audit Runner
 
+## Web UI (recommended)
+
+Run a local server with a browser-based dashboard:
+
+```bash
+npm install        # first time only
+npm start          # starts http://localhost:3000
+```
+
+Open [http://localhost:3000](http://localhost:3000), enter a URL, and click **Run Audit**.
+Live log output streams in real-time; results render automatically when the audit finishes.
+
+Use `npm run dev` for auto-restart on file changes.
+
+---
+
+## CLI
+
 Reusable URL audit script for:
 - Lighthouse (performance, accessibility, best practices, SEO)
 - Pa11y accessibility checks (WCAG2AA)

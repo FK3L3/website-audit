@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Audit</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <h1>Website Audit</h1>
+      <p>Lighthouse &middot; Pa11y &middot; Broken links &middot; Playwright smoke</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <form id="form">
+          <div class="field">
+            <label for="url">Target URL</label>
+            <input id="url" type="url" placeholder="https://example.com/" autocomplete="url" required>
+          </div>
+          <div class="options-row">
+            <label class="toggle">
+              <input type="checkbox" id="summary">
+              <span>Print summary</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="security">
+              <span>Security checks</span>
+            </label>
+          </div>
+          <button type="submit" id="runBtn" class="btn">Run Audit</button>
+        </form>
+      </section>
+
+      <section class="card log-card" id="logCard" hidden>
+        <div class="log-head">
+          <span id="statusText">Running…</span>
+          <span class="pulse" id="pulse"></span>
+        </div>
+        <pre id="log"></pre>
+      </section>
+
+      <section id="results" hidden>
+        <div class="card" id="scoresCard" hidden>
+          <h2>Lighthouse</h2>
+          <div id="scores" class="scores"></div>
+          <a id="lhLink" href="#" target="_blank" rel="noopener" class="link-out">
+            Open full report →
+          </a>
+        </div>
+
+        <div class="checks-row" id="checksRow">
+          <div class="card check-card">
+            <div class="check-icon" id="pa11yIcon"></div>
+            <div>
+              <div class="check-title">Pa11y</div>
+              <div class="check-sub" id="pa11ySub"></div>
+            </div>
+          </div>
+          <div class="card check-card">
+            <div class="check-icon" id="linksIcon"></div>
+            <div>
+              <div class="check-title">Broken Links</div>
+              <div class="check-sub" id="linksSub"></div>
+            </div>
+          </div>
+          <div class="card check-card">
+            <div class="check-icon" id="smokeIcon"></div>
+            <div>
+              <div class="check-title">Smoke</div>
+              <div class="check-sub" id="smokeSub"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="secCard" hidden>
+          <h2>Security</h2>
+          <pre id="secText" class="mono-block"></pre>
+        </div>
+
+        <div class="card" id="screenshotCard" hidden>
+          <h2>Screenshot</h2>
+          <img id="screenshot" alt="Homepage screenshot">
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

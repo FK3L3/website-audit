@@ -7,8 +7,9 @@ SECURITY_MODE=0
 URL="$DEFAULT_URL"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 REPORT_DIR="$SCRIPT_DIR/reports"
-TS="$(date +"%Y%m%d-%H%M%S")"
+TS="${AUDIT_TS:-$(date +"%Y%m%d-%H%M%S")}"
 RUN_DIR="$REPORT_DIR/$TS"
+AUDIT_EXIT=0
 
 usage() {
   cat <<'EOF'
@@ -42,6 +43,14 @@ while (($#)); do
       ;;
   esac
 done
+
+if [[ "$URL" != http://* && "$URL" != https://* ]]; then
+  echo "Error: URL must start with http:// or https://"
+  exit 1
+fi
+
+TOTAL_STEPS=4
+[ "$SECURITY_MODE" -eq 1 ] && TOTAL_STEPS=5
 
 mkdir -p "$RUN_DIR"
 
@@ -168,6 +177,11 @@ print_summary() {
   local bl_file="$RUN_DIR/broken-links.txt"
   local smoke_file="$RUN_DIR/smoke.txt"
 
+  if [ ! -f "$lh_json" ]; then
+    echo "Warning: Lighthouse JSON not found; skipping score summary."
+    return
+  fi
+
   local scores
   scores="$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const c=j.categories;console.log([Math.round(c.performance.score*100),Math.round(c.accessibility.score*100),Math.round(c['best-practices'].score*100),Math.round(c.seo.score*100)].join(' '));" "$lh_json")"
   local perf acc bp seo
@@ -212,31 +226,34 @@ print_summary() {
 echo "Running website audit for: $URL"
 echo "Report directory: $RUN_DIR"
 
-echo "[1/4] Lighthouse"
+echo "[1/$TOTAL_STEPS] Lighthouse"
 mkdir -p "$RUN_DIR/lighthouse"
 npx lighthouse "$URL" \
   --only-categories=performance,accessibility,best-practices,seo \
   --output=html --output=json \
   --output-path="$RUN_DIR/lighthouse/report" \
-  --chrome-flags="--headless" >/dev/null
+  --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" >/dev/null
 
-echo "[2/4] Accessibility (pa11y)"
+echo "[2/$TOTAL_STEPS] Accessibility (pa11y)"
 if ! npx pa11y "$URL" --reporter cli --standard WCAG2AA > "$RUN_DIR/pa11y.txt" 2>&1; then
   echo "pa11y found issues. See $RUN_DIR/pa11y.txt"
+  AUDIT_EXIT=1
 fi
 
-echo "[3/4] Broken links"
+echo "[3/$TOTAL_STEPS] Broken links"
 if ! npx blc "$URL" -ro > "$RUN_DIR/broken-links.txt" 2>&1; then
   echo "Broken link checker reported issues. See $RUN_DIR/broken-links.txt"
+  AUDIT_EXIT=1
 fi
 
-echo "[4/4] Playwright smoke"
+echo "[4/$TOTAL_STEPS] Playwright smoke"
 if ! node "$SCRIPT_DIR/smoke.mjs" "$URL" "$RUN_DIR" > "$RUN_DIR/smoke.txt" 2>&1; then
   echo "Smoke test found issues. See $RUN_DIR/smoke.txt"
+  AUDIT_EXIT=1
 fi
 
 if [ "$SECURITY_MODE" -eq 1 ]; then
-  echo "[5/5] Security checks"
+  echo "[5/$TOTAL_STEPS] Security checks"
   run_security_checks
 fi
 
@@ -259,3 +276,5 @@ fi
 if [ "$SUMMARY_ONLY" -eq 1 ]; then
   print_summary
 fi
+
+exit $AUDIT_EXIT
