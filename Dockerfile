@@ -14,11 +14,14 @@ COPY package*.json ./
 RUN npm ci
 
 # Install Playwright's Chromium + all required system libraries.
-# This is the only Chrome in the container; server.js exposes its
-# path as PUPPETEER_EXECUTABLE_PATH so Lighthouse and pa11y use it.
+# docker-entrypoint.sh resolves its path at startup and exports
+# CHROME_PATH + PUPPETEER_EXECUTABLE_PATH for Lighthouse and pa11y.
 RUN npx playwright install --with-deps chromium
 
 COPY . .
 
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 3000
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
