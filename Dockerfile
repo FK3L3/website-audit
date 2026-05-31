@@ -13,9 +13,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Install Playwright's Chromium + all required system libraries.
-# docker-entrypoint.sh resolves its path at startup and exports
-# CHROME_PATH + PUPPETEER_EXECUTABLE_PATH for Lighthouse and pa11y.
+# Pin browser install to a fixed path so the entrypoint can find it
+# reliably regardless of HOME or the runtime user.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npx playwright install --with-deps chromium
 
 COPY . .
