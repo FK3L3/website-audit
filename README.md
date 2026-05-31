@@ -1,6 +1,18 @@
 # Website Audit Runner
 
-## Web UI (recommended)
+## GitHub Actions (no setup required)
+
+Go to **Actions → Website Audit → Run workflow**, fill in the URL, and click **Run**.
+
+- Results appear in the job summary (Lighthouse scores, Pa11y, broken links, smoke status)
+- The full Lighthouse HTML report + screenshot are available as a downloadable artifact (30-day retention)
+- Optional **Security checks** flag adds HTTP header, TLS cert, and OWASP ZAP scanning
+
+No secrets or configuration needed — just push the repo to GitHub and the workflow is ready.
+
+---
+
+## Web UI (local)
 
 Run a local server with a browser-based dashboard:
 
