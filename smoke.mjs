@@ -23,8 +23,14 @@ page.on('pageerror', (err) => {
   issues.push(`pageerror: ${err.message}`);
 });
 
-await page.goto(url, { waitUntil: 'networkidle' });
-await page.screenshot({ path: `${runDir}/homepage.png`, fullPage: true });
+try {
+  await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.screenshot({ path: `${runDir}/homepage.png`, fullPage: true });
+} catch (err) {
+  issues.push(`navigation error: ${err.message}`);
+} finally {
+  await browser.close();
+}
 
 if (issues.length) {
   console.log('Issues found:');
@@ -33,5 +39,3 @@ if (issues.length) {
 } else {
   console.log('No console/page/HTTP>=400 issues detected on initial load.');
 }
-
-await browser.close();
