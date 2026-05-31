@@ -3,6 +3,15 @@ import { spawn } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { chromium } from 'playwright';
+
+// In containerised deployments there is no system Chrome; use the
+// Playwright-bundled Chromium for both Lighthouse and pa11y/puppeteer.
+let chromiumPath;
+try {
+  const p = chromium.executablePath();
+  if (existsSync(p)) chromiumPath = p;
+} catch (_) {}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ?? 3000;
@@ -44,7 +53,11 @@ app.post('/api/run', (req, res) => {
 
   const proc = spawn('bash', [SCRIPT, ...scriptArgs], {
     cwd: __dirname,
-    env: { ...process.env, AUDIT_TS: runId },
+    env: {
+      ...process.env,
+      AUDIT_TS: runId,
+      ...(chromiumPath && { PUPPETEER_EXECUTABLE_PATH: chromiumPath }),
+    },
   });
 
   const emit = (type, data) => {
