@@ -228,11 +228,14 @@ echo "Report directory: $RUN_DIR"
 
 echo "[1/$TOTAL_STEPS] Lighthouse"
 mkdir -p "$RUN_DIR/lighthouse"
+LH_EXTRA=()
+[ -n "${PUPPETEER_EXECUTABLE_PATH:-}" ] && LH_EXTRA+=("--chrome-path=$PUPPETEER_EXECUTABLE_PATH")
 npx lighthouse "$URL" \
   --only-categories=performance,accessibility,best-practices,seo \
   --output=html --output=json \
   --output-path="$RUN_DIR/lighthouse/report" \
-  --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" >/dev/null
+  --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+  "${LH_EXTRA[@]}" >/dev/null
 
 echo "[2/$TOTAL_STEPS] Accessibility (pa11y)"
 if ! npx pa11y "$URL" --reporter cli --standard WCAG2AA > "$RUN_DIR/pa11y.txt" 2>&1; then

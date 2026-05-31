@@ -2,83 +2,71 @@
 
 Runs Lighthouse, Pa11y (WCAG2AA), broken-link scanning, and a Playwright smoke test against any URL. Optional security mode adds HTTP header checks, TLS cert inspection, and an OWASP ZAP baseline scan.
 
-Three ways to run it — pick whichever fits your workflow.
+---
+
+## Deploy to Render (browser only, no commands needed)
+
+Render auto-deploys the app straight from your GitHub repo. The `render.yaml` in this repo configures everything automatically.
+
+1. Go to [render.com](https://render.com) and sign in (GitHub login works)
+2. Click **New +** → **Web Service**
+3. Select **Build and deploy from a Git repository** → connect this repo
+4. Render detects `render.yaml` and fills in all settings automatically
+5. Click **Create Web Service**
+6. Wait ~5 minutes for the first build (it installs Chromium)
+7. Open the URL Render gives you — the audit UI is live
+
+Every time you push to the repo, Render redeploys automatically.
+
+> **Free tier note:** Render's free tier spins the service down after 15 minutes of inactivity. The first request after sleep takes ~30 seconds to wake up. Upgrade to the $7/month Starter plan to keep it always on.
 
 ---
 
-## 1. GitHub Actions
+## GitHub Actions (no server needed)
 
-No local setup required. Go to **Actions → Website Audit → Run workflow**, enter a URL, and click **Run**.
+Go to **Actions → Website Audit → Run workflow**, enter a URL, and click **Run**.
 
-**Inputs**
+- Results appear in the job summary with Lighthouse score indicators (🟢/🟡/🔴) and pass/fail rows for each check
+- Full Lighthouse HTML report, all result files, and a screenshot are uploaded as a downloadable artifact (30-day retention)
 
-| Input | Default | Description |
-|---|---|---|
-| `url` | `https://example.com/` | Target URL to audit |
-| `summary` | off | Print a compact score summary at the end |
-| `security` | off | Run security checks (headers, TLS, ZAP) |
-
-**What you get**
-
-- A job summary in the Actions run with Lighthouse score indicators (🟢/🟡/🔴), and pass/fail rows for Pa11y, broken links, smoke, and (optionally) security
-- The full Lighthouse HTML report, all result text files, and a full-page screenshot uploaded as a downloadable artifact (30-day retention)
-
-No secrets or extra configuration needed — push the repo to GitHub and the workflow is ready.
+No setup required — just push the repo to GitHub.
 
 ---
 
-## 2. Web UI (local)
+## Run locally
 
-A local Express server with a browser dashboard. Enter a URL, click **Run Audit**, and watch live output stream in. Results render automatically when the audit finishes: Lighthouse score rings, status cards, screenshot, and a link to the full Lighthouse HTML report.
-
-**Start**
+**Web UI**
 
 ```bash
 npm install    # first time only
 npm start      # → http://localhost:3000
 ```
 
-Use `npm run dev` for auto-restart on file changes (requires Node 18+).
-
----
-
-## 3. CLI
-
-Run the audit script directly from your terminal.
-
-**Requirements:** `npm` and `npx` must be in your PATH. Dependencies install automatically on first run.
+**CLI**
 
 ```bash
 chmod +x audit.sh
 ./audit.sh [--summary] [--security] [url]
 ```
 
-**Options**
+---
+
+## CLI reference
 
 | Flag | Description |
 |---|---|
-| `[url]` | Target URL (must start with `http://` or `https://`). Defaults to `https://example.com/` |
+| `[url]` | Target URL (`http://` or `https://` required). Defaults to `https://example.com/` |
 | `--summary` | Print a compact score/issue summary at the end |
-| `--security` | Run security checks: HTTP headers, TLS cert, optional OWASP ZAP scan |
+| `--security` | HTTP header check, TLS cert info, optional OWASP ZAP scan |
 | `-h`, `--help` | Show usage |
 
-Flags can be combined in any order. If multiple URLs are passed, the last one wins.
-
-**Exit code:** `0` when all checks pass, `1` when any check finds issues — suitable for use in CI pipelines.
+Flags can be combined in any order. Exit code is `0` when all checks pass, `1` when any check finds issues.
 
 **Examples**
 
 ```bash
-# Audit the default URL
-./audit.sh
-
-# Audit a specific URL
 ./audit.sh https://mysite.com/
-
-# Compact summary
 ./audit.sh --summary https://mysite.com/
-
-# Full security scan with summary
 ./audit.sh --security --summary https://mysite.com/
 ```
 
@@ -86,13 +74,17 @@ Flags can be combined in any order. If multiple URLs are passed, the last one wi
 
 ## Security checks (`--security`)
 
-Checks three things:
+| Check | Tool | Requires |
+|---|---|---|
+| HTTP security headers | `curl` | `curl` in PATH |
+| TLS certificate expiry | `openssl` | `openssl` in PATH |
+| OWASP ZAP baseline scan | Docker | Docker running |
 
-1. **HTTP headers** — presence of `Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`
-2. **TLS certificate** — expiry date, issuer, days remaining (requires `openssl`)
-3. **OWASP ZAP baseline scan** — passive scan via Docker (`ghcr.io/zaproxy/zaproxy:stable`); falls back to local `zap.sh` if Docker is unavailable; skipped if neither is present
+Headers checked: `Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
 
-**Docker setup for ZAP (Debian/Ubuntu)**
+ZAP falls back to local `zap.sh` if Docker is unavailable, and skips entirely if neither is present.
+
+**Docker setup (Debian/Ubuntu)**
 
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io
@@ -111,18 +103,18 @@ Each run creates a timestamped folder at `reports/YYYYMMDD-HHMMSS/`:
 | File | Contents |
 |---|---|
 | `lighthouse/report.report.html` | Full interactive Lighthouse report |
-| `lighthouse/report.report.json` | Machine-readable Lighthouse data |
+| `lighthouse/report.report.json` | Machine-readable scores |
 | `pa11y.txt` | Accessibility issues (WCAG2AA) |
 | `broken-links.txt` | Broken link scan results |
-| `smoke.txt` | Console errors, page errors, HTTP 4xx/5xx on load |
+| `smoke.txt` | Console errors, page errors, HTTP 4xx/5xx |
 | `homepage.png` | Full-page screenshot |
 | `security.txt` | Header and TLS results (`--security` only) |
-| `zap.txt`, `zap/` | ZAP scan output (`--security` + Docker only) |
+| `zap.txt`, `zap/` | ZAP output (`--security` + Docker only) |
 
-The `reports/` directory is excluded from git.
+The `reports/` directory is gitignored. On Render, reports are stored in the container and reset on each redeploy — use GitHub Actions artifacts for persistent storage.
 
 ---
 
 ## Responsible use
 
-This tool can perform active scanning (ZAP baseline, broken-link crawling). Only run it against sites you own or have explicit written permission to test. Unauthorized scanning may be illegal and can trigger abuse alerts.
+Only run this tool against sites you own or have explicit written permission to test. The broken-link crawler and ZAP scan make many outbound requests and may trigger abuse alerts on third-party services.
