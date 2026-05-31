@@ -1,139 +1,128 @@
-# Website Audit Runner
+# Website Audit
 
-## GitHub Actions (no setup required)
+Runs Lighthouse, Pa11y (WCAG2AA), broken-link scanning, and a Playwright smoke test against any URL. Optional security mode adds HTTP header checks, TLS cert inspection, and an OWASP ZAP baseline scan.
 
-Go to **Actions → Website Audit → Run workflow**, fill in the URL, and click **Run**.
-
-- Results appear in the job summary (Lighthouse scores, Pa11y, broken links, smoke status)
-- The full Lighthouse HTML report + screenshot are available as a downloadable artifact (30-day retention)
-- Optional **Security checks** flag adds HTTP header, TLS cert, and OWASP ZAP scanning
-
-No secrets or configuration needed — just push the repo to GitHub and the workflow is ready.
+Three ways to run it — pick whichever fits your workflow.
 
 ---
 
-## Web UI (local)
+## 1. GitHub Actions
 
-Run a local server with a browser-based dashboard:
+No local setup required. Go to **Actions → Website Audit → Run workflow**, enter a URL, and click **Run**.
+
+**Inputs**
+
+| Input | Default | Description |
+|---|---|---|
+| `url` | `https://example.com/` | Target URL to audit |
+| `summary` | off | Print a compact score summary at the end |
+| `security` | off | Run security checks (headers, TLS, ZAP) |
+
+**What you get**
+
+- A job summary in the Actions run with Lighthouse score indicators (🟢/🟡/🔴), and pass/fail rows for Pa11y, broken links, smoke, and (optionally) security
+- The full Lighthouse HTML report, all result text files, and a full-page screenshot uploaded as a downloadable artifact (30-day retention)
+
+No secrets or extra configuration needed — push the repo to GitHub and the workflow is ready.
+
+---
+
+## 2. Web UI (local)
+
+A local Express server with a browser dashboard. Enter a URL, click **Run Audit**, and watch live output stream in. Results render automatically when the audit finishes: Lighthouse score rings, status cards, screenshot, and a link to the full Lighthouse HTML report.
+
+**Start**
 
 ```bash
-npm install        # first time only
-npm start          # starts http://localhost:3000
+npm install    # first time only
+npm start      # → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000), enter a URL, and click **Run Audit**.
-Live log output streams in real-time; results render automatically when the audit finishes.
-
-Use `npm run dev` for auto-restart on file changes.
+Use `npm run dev` for auto-restart on file changes (requires Node 18+).
 
 ---
 
-## CLI
+## 3. CLI
 
-Reusable URL audit script for:
-- Lighthouse (performance, accessibility, best practices, SEO)
-- Pa11y accessibility checks (WCAG2AA)
-- Broken internal/external link scan
-- Playwright smoke checks (console errors, page errors, HTTP 4xx/5xx)
-- Optional security checks (`--security`): header presence, TLS cert, optional OWASP ZAP baseline via Docker
+Run the audit script directly from your terminal.
 
-## Default target
-`https://example.com/`
-
-## Authorization / Responsible Use
-This tool can perform security-oriented scanning (for example, OWASP ZAP when `--security` is enabled).
-
-Only run it against websites and systems you own or where you have explicit written permission to test. Unauthorized scanning may be illegal and can trigger abuse alerts.
-
-## Usage
-From this folder:
+**Requirements:** `npm` and `npx` must be in your PATH. Dependencies install automatically on first run.
 
 ```bash
 chmod +x audit.sh
+./audit.sh [--summary] [--security] [url]
+```
+
+**Options**
+
+| Flag | Description |
+|---|---|
+| `[url]` | Target URL (must start with `http://` or `https://`). Defaults to `https://example.com/` |
+| `--summary` | Print a compact score/issue summary at the end |
+| `--security` | Run security checks: HTTP headers, TLS cert, optional OWASP ZAP scan |
+| `-h`, `--help` | Show usage |
+
+Flags can be combined in any order. If multiple URLs are passed, the last one wins.
+
+**Exit code:** `0` when all checks pass, `1` when any check finds issues — suitable for use in CI pipelines.
+
+**Examples**
+
+```bash
+# Audit the default URL
 ./audit.sh
+
+# Audit a specific URL
+./audit.sh https://mysite.com/
+
+# Compact summary
+./audit.sh --summary https://mysite.com/
+
+# Full security scan with summary
+./audit.sh --security --summary https://mysite.com/
 ```
 
-### Arguments
-The script supports these arguments:
+---
 
-- `--summary`: Print a compact summary at the end (scores + issue counts).
-- `--security`: Run extra security checks (HTTP header presence, TLS cert info, and OWASP ZAP scan).
-- `-h`, `--help`: Show built-in help/usage.
-- `[url]`: Optional target URL. Defaults to the “Default target” above.
+## Security checks (`--security`)
 
-Notes:
-- Flags can be combined in any order: `./audit.sh --security --summary <url>`.
-- If you provide multiple URLs, the last one “wins”.
+Checks three things:
 
-### Examples
-Default URL:
+1. **HTTP headers** — presence of `Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`
+2. **TLS certificate** — expiry date, issuer, days remaining (requires `openssl`)
+3. **OWASP ZAP baseline scan** — passive scan via Docker (`ghcr.io/zaproxy/zaproxy:stable`); falls back to local `zap.sh` if Docker is unavailable; skipped if neither is present
+
+**Docker setup for ZAP (Debian/Ubuntu)**
 
 ```bash
-./audit.sh
-```
-
-Override URL:
-
-```bash
-./audit.sh https://example.com/
-```
-
-Help:
-
-```bash
-./audit.sh --help
-```
-
-Summary view (scores + issue counts):
-
-```bash
-./audit.sh --summary
-./audit.sh --summary https://example.com/
-```
-
-Security mode (includes ZAP; requires Docker for the container baseline scan, otherwise uses local `zap.sh` if present):
-
-```bash
-./audit.sh --security
-./audit.sh --security https://example.com/
-```
-
-### Docker Setup (For OWASP ZAP Baseline)
-By default, `--security` will try to run the OWASP ZAP baseline scan in a Docker container (`ghcr.io/zaproxy/zaproxy:stable`).
-
-If Docker is not installed or not running, the script will fall back to local `zap.sh` (if installed). If neither is available, it will skip the ZAP step.
-
-Debian/Kali install:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y docker.io
+sudo apt-get update && sudo apt-get install -y docker.io
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
-```
-
-Important: group membership changes usually require logging out and back in (or starting a new shell) before `docker` works without `sudo`.
-
-Quick check:
-
-```bash
-docker --version
+# Log out and back in, then verify:
 docker info
 ```
 
-Security + summary:
-
-```bash
-./audit.sh --security --summary
-./audit.sh --security --summary https://example.com/
-```
+---
 
 ## Output
-Each run creates a timestamped folder in `reports/` with:
-- Lighthouse HTML and JSON reports
-- `pa11y.txt`
-- `broken-links.txt`
-- `smoke.txt`
-- `homepage.png`
-- `security.txt` (when `--security` is used)
-- `zap.txt` and `zap/` artifacts (when `--security` and Docker are available)
+
+Each run creates a timestamped folder at `reports/YYYYMMDD-HHMMSS/`:
+
+| File | Contents |
+|---|---|
+| `lighthouse/report.report.html` | Full interactive Lighthouse report |
+| `lighthouse/report.report.json` | Machine-readable Lighthouse data |
+| `pa11y.txt` | Accessibility issues (WCAG2AA) |
+| `broken-links.txt` | Broken link scan results |
+| `smoke.txt` | Console errors, page errors, HTTP 4xx/5xx on load |
+| `homepage.png` | Full-page screenshot |
+| `security.txt` | Header and TLS results (`--security` only) |
+| `zap.txt`, `zap/` | ZAP scan output (`--security` + Docker only) |
+
+The `reports/` directory is excluded from git.
+
+---
+
+## Responsible use
+
+This tool can perform active scanning (ZAP baseline, broken-link crawling). Only run it against sites you own or have explicit written permission to test. Unauthorized scanning may be illegal and can trigger abuse alerts.
