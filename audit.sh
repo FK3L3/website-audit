@@ -7,7 +7,7 @@ SECURITY_MODE=0
 URL="$DEFAULT_URL"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 REPORT_DIR="$SCRIPT_DIR/reports"
-TS="$(date +"%Y%m%d-%H%M%S")"
+TS="${AUDIT_TS:-$(date +"%Y%m%d-%H%M%S")}"
 RUN_DIR="$REPORT_DIR/$TS"
 AUDIT_EXIT=0
 

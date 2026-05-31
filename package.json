@@ -1,9 +1,11 @@
 {
   "name": "website-audit",
   "version": "1.0.0",
+  "type": "module",
   "description": "Reusable URL audit script for: - Lighthouse (performance, accessibility, best practices, SEO) - Pa11y accessibility checks (WCAG2AA) - Broken internal/external link scan - Playwright smoke checks (console errors, page errors, HTTP 4xx/5xx)",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +15,8 @@
     "lighthouse": "^13.0.3",
     "pa11y": "^9.1.0",
     "playwright": "^1.58.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
